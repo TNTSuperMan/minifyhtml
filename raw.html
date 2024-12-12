@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>minifyhtml</title>
+  </head>
+  <body>
+    <h1>minifyhtml</h1>
+    <p>javascriptを用いて無駄なHTMLを最小化します。</p>
+    <h2>注意</h2>
+    <p>HTMLのIDを指定した要素がグローバル変数になる機能が使えないっぽいです。<br>
+    <small>まあIDを指定することがグローバル汚染として問題視されるぐらいだから使わないと思うけど</small></p>
+    <input type="file" onchange="c()"><br><span></span>
+    <button onclick="navigator.clipboard.writeText(g('textarea').value)">コピー</button>
+    <iframe style="display:none"></iframe><br>
+    <textarea readonly style="word-break:break-all;width:100%;height:50%;resize:vertical"></textarea>
+    <script src="https://unpkg.com/terser@5.37.0/dist/bundle.min.js"></script>
+    <script>
+      let g = e => document.querySelector(e)
+      g("iframe").onload = _ => {
+        let z = g("iframe").contentDocument.documentElement.outerText.length;
+        let s = e => /$[a-zA-Z$_]+[a-zA-Z0-9$_]*^/.test(e)?"."+e:`[${JSON.stringify(e)}]`
+        let t = (e,i) => {
+          if(e.nodeType == 1){
+            return`$.${e.tagName.toLowerCase()}${
+            Array.from(e.attributes)
+              .map(e=>[e.value,e.name]).flat()
+              .map(s).join("")}(${
+                Array.from(e.childNodes).map(z=>t(z,e.tagName=="SCRIPT")).filter(e=>e).join(",")
+              })`
+          }else if(i){
+            try{
+              return JSON.stringify(Terser.minify_sync(e.nodeValue).code)
+            }catch(r){
+              console.log(r)
+              return JSON.stringify(e.nodeValue)
+            }
+          }else return e.nodeValue.trim()=="" ? void 0 : JSON.stringify(e.nodeValue.trim())
+        }
+        let l = `let _=(e,t)=>new Proxy(((...n)=>1==n.length&&"function"==typeof n[0]?e.addEventListener(t.pop(),n[0])||_(e,t):n.forEach((t=>e.appendChild("string"==typeof t?new Text(t):t)))||e),{get:(n,p)=>(t.push(p),2==t.length&&e.setAttribute(t.pop(),t.pop()),_(e,t))}),$=new Proxy({},{get:(e,t)=>_(document.createElement(t),[])});`
+        g("textarea").value=`<script>(z=>{${l}document.documentElement.remove();document.append(${t(g("iframe").contentDocument.documentElement)})})()</scr${""}ipt>`
+        g("span").textContent = `圧縮率(推測): ${g("textarea").value.length/z*100}%`
+      }
+      let c = _ => 
+        g("input").files.length==0?alert("ファイルが選択されていません"):
+        g("input").files[0].text().then(e=>g("iframe").srcdoc = e)
+    </script>
+  </body>
+</html>
