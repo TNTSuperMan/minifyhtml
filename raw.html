@@ -19,7 +19,7 @@
       let d = "";
       let g = e => document.querySelector(e)
       const update = _ => {
-        let s = e => /$[a-zA-Z$_]+[a-zA-Z0-9$_]*^/.test(e)?"."+e:`[${JSON.stringify(e)}]`
+        let s = e => /^[a-zA-Z$_]+[a-zA-Z0-9$_]*$/.test(e)?"."+e:`[${JSON.stringify(e)}]`
         let t = (e,i) => {
           if(e.nodeType == 1){
             return`$.${e.tagName.toLowerCase()}${
